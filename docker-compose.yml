@@ -1,0 +1,49 @@
+version: '2'
+services:
+  elasticsearch:
+    restart: always
+    build: elasticsearch/
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /home/o2ouser/elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx1024m -Xms256m"
+    container_name: elk-es
+    networks:
+      - elk
+
+  logstash:
+    restart: always
+    build: logstash/
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx1024m -Xms256m"
+    container_name: elk-logstash
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    restart: always
+    build: kibana/
+    volumes:
+      - ./kibana/config/:/usr/share/kibana/config
+    ports:
+      - "5601:5601"
+    container_name: elk-kibana
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+networks:
+  elk:
+    driver: bridge
